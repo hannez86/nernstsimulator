@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elektrochemische Zellen - Nernst-Gleichung Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 250px 1fr 250px;
+            gap: 20px;
+            padding: 30px;
+            min-height: 600px;
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar h2 {
+            color: #667eea;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .control-group select,
+        .control-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .control-group select:focus,
+        .control-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .control-group input[type="number"] {
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .simulation-area {
+            background: linear-gradient(to bottom, #e3f2fd 0%, #ffffff 100%);
+            border-radius: 15px;
+            padding: 30px;
+            position: relative;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .cell-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            margin-top: 50px;
+            position: relative;
+            height: 450px;
+        }
+
+        .half-cell {
+            position: relative;
+            width: 200px;
+            text-align: center;
+        }
+
+        .electrode {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 220px;
+            background: linear-gradient(180deg, #c0c0c0 0%, #808080 100%);
+            border-radius: 6px;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            display: block;
+        }
+
+        .electrode.copper {
+            background: linear-gradient(180deg, #f4a460 0%, #cd853f 100%);
+        }
+
+        .electrode.silver {
+            background: linear-gradient(180deg, #e8e8e8 0%, #c0c0c0 100%);
+        }
+
+        .electrode.zinc {
+            background: linear-gradient(180deg, #b8b8b8 0%, #787878 100%);
+        }
+
+        .electrode-label {
+            position: absolute;
+            top: -70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            white-space: nowrap;
+            z-index: 11;
+        }
+
+        .beaker {
+            width: 160px;
+            height: 200px;
+            background: transparent;
+            border: 4px solid #2c3e50;
+            border-top: 2px solid #2c3e50;
+            border-radius: 5px 5px 20px 20px;
+            position: relative;
+            margin: 0 auto;
+            box-shadow: inset 0 -10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .solution {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 85%;
+            background: #a8d8ea;
+            border-radius: 0 0 16px 16px;
+            transition: background-color 0.5s;
+            overflow: hidden;
+        }
+
+        .solution::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: linear-gradient(to bottom,
+                rgba(255, 255, 255, 0.4) 0%,
+                rgba(255, 255, 255, 0) 100%);
+        }
+
+        .ion-label {
+            margin-top: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+
+        .concentration-label {
+            margin-top: 5px;
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .potential-label {
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 0.9em;
+            font-weight: 600;
+            border-radius: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            display: inline-block;
+        }
+
+        .salt-bridge {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 240px;
+            height: 170px;
+            z-index: 5;
+        }
+
+        .salt-bridge-tube {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 160px;
+            height: 25px;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                #ffd700 8%,
+                #ffed4e 50%,
+                #ffd700 92%,
+                transparent 100%);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .salt-bridge-leg {
+            position: absolute;
+            width: 16px;
+            height: 120px;
+            background: linear-gradient(180deg,
+                #ffd700 0%,
+                #ffed4e 50%,
+                #ffd700 100%);
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        }
+
+        .salt-bridge-leg.left {
+            top: 12px;
+            left: 40px;
+        }
+
+        .salt-bridge-leg.right {
+            top: 12px;
+            right: 40px;
+        }
+
+        .salt-bridge-label {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #666;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            white-space: nowrap;
+        }
+
+        .swap-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            border: 3px solid white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+            transition: all 0.3s ease;
+            z-index: 15;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .swap-button:hover {
+            transform: translate(-50%, -50%) scale(1.1) rotate(180deg);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+
+        .swap-button:active {
+            transform: translate(-50%, -50%) scale(0.95);
+        }
+
+        .swap-button svg {
+            display: block;
+        }
+
+        .voltmeter {
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 80px;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            z-index: 20;
+            display: block;
+        }
+
+        .voltmeter-display {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 160px;
+            height: 40px;
+            background: #1a1a1a;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+            border: 2px solid #333;
+        }
+
+        .voltmeter-label {
+            position: absolute;
+            bottom: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 0.7em;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .wire {
+            position: absolute;
+            background: #2c3e50;
+            z-index: 15;
+        }
+
+        .wire-left-vertical {
+            top: -50px;
+            left: calc(25% + 4px);
+            width: 4px;
+            height: 110px;
+            background: #2c3e50;
+        }
+
+        .wire-right-vertical {
+            top: -50px;
+            right: calc(25% + 4px);
+            width: 4px;
+            height: 110px;
+            background: #2c3e50;
+        }
+
+        .wire-left-horizontal {
+            top: -162px;
+            left: calc(25% + 4px);
+            width: calc(25% - 96px);
+            height: 4px;
+            background: #2c3e50;
+        }
+
+        .wire-right-horizontal {
+            top: -162px;
+            right: calc(25% + 4px);
+            width: calc(25% - 96px);
+            height: 4px;
+            background: #2c3e50;
+        }
+
+        /* Terminal connections */
+        .terminal {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: #e74c3c;
+            border-radius: 50%;
+            border: 3px solid #c0392b;
+            z-index: 16;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .terminal.negative {
+            background: #000;
+            border-color: #555;
+        }
+
+        .terminal.left {
+            top: -52px;
+            left: calc(25% + 2px);
+        }
+
+        .terminal.right {
+            top: -52px;
+            right: calc(25% + 2px);
+        }
+
+        .terminal.meter-left {
+            bottom: 28px;
+            left: 16px;
+        }
+
+        .terminal.meter-right {
+            bottom: 28px;
+            right: 16px;
+        }
+
+        .info-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-panel h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .level-control {
+            margin-top: 30px;
+            width: 100%;
+        }
+
+        .level-indicator {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .level-indicator label {
+            display: block;
+            margin-bottom: 8px;
+            color: #667eea;
+            font-size: 1em;
+            font-weight: 600;
+        }
+
+        .level-indicator select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #667eea;
+            font-size: 1em;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .level-indicator select:hover {
+            border-color: #764ba2;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .question-display {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+            border: 2px solid #ff6b6b;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 80px;
+            display: none;
+        }
+
+        .question-display.active {
+            display: block;
+        }
+
+        .question-display h3 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .question-display p {
+            color: #333;
+            font-size: 1em;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .question-display ol {
+            color: #333;
+            font-size: 0.95em;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+
+        .question-display ol li {
+            margin-bottom: 8px;
+        }
+
+        .question-display .btn {
+            margin-top: 15px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        }
+
+        .question-display .btn:hover {
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .equation-display {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-family: 'Times New Roman', serif;
+            text-align: center;
+        }
+
+        .equation-display .equation {
+            font-size: 1.2em;
+            font-style: italic;
+            color: #2c3e50;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: slideIn 0.3s;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #999;
+            cursor: pointer;
+            transition: color 0.3s;
+            background: none;
+            border: none;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .modal-content h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .modal-content h3 {
+            color: #764ba2;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .modal-content ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+
+        .modal-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .modal-content table th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .modal-content table td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .feedback {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .feedback.success {
+            background: #4caf50;
+            color: white;
+        }
+
+        .feedback.error {
+            background: #f44336;
+            color: white;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .links a {
+            display: block;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .links a:hover {
+            background: #667eea15;
+            transform: translateX(5px);
+        }
+
+        .equation-block {
+            background: #f8f4ee;
+            border: 1px solid #eadfce;
+            border-radius: 12px;
+            padding: 16px 18px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        }
+
+        .equation-line {
+            font-family: "Georgia", "Times New Roman", serif;
+            font-size: 1.05em;
+            line-height: 1.6;
+            color: #2b2b2b;
+        }
+
+        .equation-line + .equation-line {
+            margin-top: 10px;
+        }
+
+        .equation-nernst {
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px dashed #d5c7b1;
+            font-size: 1.1em;
+        }
+
+        .equation-block sup {
+            font-size: 0.7em;
+        }
+
+        .equation-block .eq {
+            font-style: italic;
+            letter-spacing: 0.2px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                max-width: 600px;
+                margin: 0 auto;
+            }
+
+            .cell-container {
+                height: 400px;
+            }
+        }
+
+        /* Bubble animation for hydrogen electrode */
+        .bubble {
+            position: absolute;
+            bottom: 0;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(200,230,255,0.6) 100%);
+            border-radius: 50%;
+            animation: rise 2s ease-in infinite;
+            opacity: 0;
+        }
+
+        @keyframes rise {
+            0% {
+                bottom: 0;
+                opacity: 0;
+                transform: translateX(0) scale(0.5);
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                bottom: 100%;
+                opacity: 0;
+                transform: translateX(20px) scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ Elektrochemische Zellen</h1>
+        </header>
+
+        <div class="main-content">
+            <!-- Left Sidebar - Anode -->
+            <aside class="sidebar">
+                <h2>Linke Elektrode</h2>
+
+                <div class="control-group">
+                    <label for="electrode-left">Elektrode wählen:</label>
+                    <select id="electrode-left">
+                        <option value="">-- Elektrode wählen --</option>
+                        <option value="0">Pt / Wasserstoff</option>
+                        <option value="1">Silber (Ag)</option>
+                        <option value="2">Kupfer (Cu)</option>
+                        <option value="3">Blei (Pb)</option>
+                        <option value="4">Nickel (Ni)</option>
+                        <option value="5">Cadmium (Cd)</option>
+                        <option value="6">Eisen (Fe)</option>
+                        <option value="7">Zink (Zn)</option>
+                        <option value="8">Magnesium (Mg)</option>
+                        <option value="9">Whodatium (Wd)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="solution-left">Lösung wählen:</label>
+                    <select id="solution-left">
+                        <option value="">-- Lösung wählen --</option>
+                        <option value="0">Salpetersäure (HNO₃)</option>
+                        <option value="1">Silbernitrat (AgNO₃)</option>
+                        <option value="2">Kupfer(II)-nitrat</option>
+                        <option value="3">Blei(II)-nitrat</option>
+                        <option value="4">Nickel(II)-nitrat</option>
+                        <option value="5">Cadmiumnitrat</option>
+                        <option value="6">Eisen(II)-nitrat</option>
+                        <option value="7">Zinknitrat</option>
+                        <option value="8">Magnesiumnitrat</option>
+                        <option value="9">Whodatium(II)-nitrat</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="concentration-left">Konzentration (mol/L):</label>
+                    <input type="number" id="concentration-left" min="0.0001" max="2" step="0.01" value="1.00">
+                    <small style="display: block; margin-top: 5px; color: #666; text-align: center;">
+                        0.0001 - 2.00 M
+                    </small>
+                </div>
+
+                <button class="btn" id="btn-measure">
+                    📊 Zellspannung messen
+                </button>
+
+                <div class="links">
+                    <a href="#" id="link-potentials">📋 Standardpotentiale</a>
+                </div>
+            </aside>
+
+            <!-- Center - Simulation Area -->
+            <main class="simulation-area">
+                <div class="cell-container">
+                    <!-- Voltmeter -->
+                    <div class="voltmeter" id="voltmeter">
+                        <div class="voltmeter-display" id="voltage-display">0.000 V</div>
+                        <div class="voltmeter-label">VOLTMETER</div>
+                    </div>
+
+                    <!-- Left Half Cell -->
+                    <div class="half-cell" id="half-cell-left">
+                        <div class="electrode-label" id="electrode-label-left">Keine Elektrode</div>
+                        <div class="electrode" id="electrode-left-visual"></div>
+                        <div class="beaker">
+                            <div class="solution" id="solution-left-visual"></div>
+                        </div>
+                        <div class="ion-label" id="ion-label-left">-</div>
+                        <div class="concentration-label" id="conc-label-left">-</div>
+                        <div class="potential-label" id="potential-label-left">-</div>
+                    </div>
+
+                    <!-- Salt Bridge -->
+                    <div class="salt-bridge">
+                        <div class="salt-bridge-tube"></div>
+                        <div class="salt-bridge-leg left"></div>
+                        <div class="salt-bridge-leg right"></div>
+                        <div class="salt-bridge-label">Salzbrücke<br>2.00 M NaNO₃</div>
+                    </div>
+
+                    <!-- Swap Button -->
+                    <button class="swap-button" id="swap-electrodes" title="Elektroden vertauschen">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <defs>
+                                <marker id="arrowhead-left" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                                    <polygon points="0 5, 10 0, 10 10" fill="white" />
+                                </marker>
+                                <marker id="arrowhead-right" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                                    <polygon points="10 5, 0 0, 0 10" fill="white" />
+                                </marker>
+                            </defs>
+                            <!-- Left arrow -->
+                            <path d="M 5 15 L 35 15" stroke="white" stroke-width="3" marker-start="url(#arrowhead-left)" />
+                            <!-- Right arrow -->
+                            <path d="M 35 25 L 5 25" stroke="white" stroke-width="3" marker-end="url(#arrowhead-right)" />
+                        </svg>
+                    </button>
+
+                    <!-- Right Half Cell -->
+                    <div class="half-cell" id="half-cell-right">
+                        <div class="electrode-label" id="electrode-label-right">Keine Elektrode</div>
+                        <div class="electrode" id="electrode-right-visual"></div>
+                        <div class="beaker">
+                            <div class="solution" id="solution-right-visual"></div>
+                        </div>
+                        <div class="ion-label" id="ion-label-right">-</div>
+                        <div class="concentration-label" id="conc-label-right">-</div>
+                        <div class="potential-label" id="potential-label-right">-</div>
+                    </div>
+                </div>
+
+                <!-- Level selector and question display below beakers -->
+                <div class="level-control">
+                    <div class="level-indicator">
+                        <label>Schwierigkeitsstufe:</label>
+                        <select id="level-select">
+                            <option value="0" selected>Level 0 - Einführung</option>
+                            <option value="1">Level 1 - Identifikation</option>
+                            <option value="2">Level 2 - Standardpotential</option>
+                            <option value="3">Level 3 - Whodatium</option>
+                            <option value="4">Level 4 - Konzentrationsänderung</option>
+                        </select>
+                    </div>
+                    <div class="question-display" id="question-display"></div>
+                </div>
+
+            </main>
+
+            <!-- Right Sidebar - Cathode -->
+            <aside class="sidebar">
+                <h2>Rechte Elektrode</h2>
+
+                <div class="control-group">
+                    <label for="electrode-right">Elektrode wählen:</label>
+                    <select id="electrode-right">
+                        <option value="">-- Elektrode wählen --</option>
+                        <option value="0">Pt / Wasserstoff</option>
+                        <option value="1">Silber (Ag)</option>
+                        <option value="2">Kupfer (Cu)</option>
+                        <option value="3">Blei (Pb)</option>
+                        <option value="4">Nickel (Ni)</option>
+                        <option value="5">Cadmium (Cd)</option>
+                        <option value="6">Eisen (Fe)</option>
+                        <option value="7">Zink (Zn)</option>
+                        <option value="8">Magnesium (Mg)</option>
+                        <option value="9">Whodatium (Wd)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="solution-right">Lösung wählen:</label>
+                    <select id="solution-right">
+                        <option value="">-- Lösung wählen --</option>
+                        <option value="0">Salpetersäure (HNO₃)</option>
+                        <option value="1">Silbernitrat (AgNO₃)</option>
+                        <option value="2">Kupfer(II)-nitrat</option>
+                        <option value="3">Blei(II)-nitrat</option>
+                        <option value="4">Nickel(II)-nitrat</option>
+                        <option value="5">Cadmiumnitrat</option>
+                        <option value="6">Eisen(II)-nitrat</option>
+                        <option value="7">Zinknitrat</option>
+                        <option value="8">Magnesiumnitrat</option>
+                        <option value="9">Whodatium(II)-nitrat</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="concentration-right">Konzentration (mol/L):</label>
+                    <input type="number" id="concentration-right" min="0.0001" max="2" step="0.01" value="1.00">
+                    <small style="display: block; margin-top: 5px; color: #666; text-align: center;">
+                        0.0001 - 2.00 M
+                    </small>
+                </div>
+
+                <button class="btn btn-secondary" id="btn-new-problem">
+                    🔄 Zurücksetzen
+                </button>
+
+                <div class="links">
+                    <a href="#" id="link-about">ℹ️ Über die Simulation</a>
+                    <a href="#" id="link-background">📖 Hintergrund</a>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <button class="modal-close" id="modal-close">&times;</button>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script src="simulation.js"></script>
+</body>
+</html>

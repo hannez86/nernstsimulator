@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520">
+  <rect width="100%" height="100%" fill="#ffffff" />
+  <g font-family="Georgia, 'Times New Roman', serif" fill="#111111">
+    <text x="60" y="80" font-size="36">U(Silberzelle) = E°(Kathode) − {E°(Anode) − 0,060 V · Anzahl der 1/10‑Verdünnungen}</text>
+    <text x="60" y="140" font-size="36">U(Kupferzelle) = E°(Kathode) − {E°(Anode) − 0,030 V · Anzahl der 1/10‑Verdünnungen}</text>
+
+    <text x="60" y="230" font-size="28">e) Erkläre, dass die „Anzahl der 1/10‑Verdünnungen“ sich gut über den negativen</text>
+    <text x="60" y="270" font-size="28">Logarithmus zur Basis 10 der Konzentration des Elektrolyten ausdrücken lassen.</text>
+
+    <text x="60" y="330" font-size="28">f) Als letzten Schritt kannst du nun überlegen, weshalb der Korrekturterm für Silber‑</text>
+    <text x="60" y="370" font-size="28">und Kupferzelle unterschiedlich ist. Dies führt zu folgendem Zusammenhang für</text>
+    <text x="60" y="410" font-size="28">die Abhängigkeit des Elektrodenpotentials von der Konzentration (vereinfachte Nernst‑Gleichung):</text>
+
+    <text x="260" y="480" font-size="34">E = E°(Me|Me<tspan font-size="24" dy="-12">z+</tspan><tspan dy="12"></tspan>) + (0,059 V / z) · lg c(Me<tspan font-size="24" dy="-12">z+</tspan><tspan dy="12"></tspan>)</text>
+  </g>
+</svg>
